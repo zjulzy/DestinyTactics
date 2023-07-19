@@ -18,6 +18,12 @@ namespace Players
         private bool bMoving;
         [Header("ai索敌距离")] public int distince;
 
+        public void Awake()
+        {
+            characters = new List<Character>();
+            targets = new Dictionary<Character, Character>();
+        }
+
         public void Start()
         {
             foreach (var character in FindObjectsOfType<Character>())
@@ -95,7 +101,10 @@ namespace Players
 
                         if (finalPath.Count > 0)
                         {
+                            character.correspondingCell.correspondingCharacter = null;
+                            finalPath[finalPath.Count - 1].correspondingCharacter = character;
                             StartCoroutine(character.Move(finalPath[finalPath.Count - 1], finalPath));
+
                         }
 
                         while (bMoving)
@@ -119,6 +128,8 @@ namespace Players
                     Cell destination = availableCells[Random.Range(0, availableCells.Count)];
                     var path = new List<Cell>();
                     AStar.CalcuPath(gridSystem.AdjacencyList, path, character.correspondingCell, destination);
+                    character.correspondingCell.correspondingCharacter = null;
+                    destination.correspondingCharacter = character;
                     StartCoroutine(character.Move(destination, path));
                 }
             }

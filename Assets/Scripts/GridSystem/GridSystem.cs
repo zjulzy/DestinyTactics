@@ -17,11 +17,11 @@ namespace DestinyTactics.GridSystem
 
     public static class CellColor
     {
-        public static Color normal = Color.white;
+        public static Color normal = Color.gray;
         public static Color hover = Color.magenta;
-        public static Color available = Color.gray;
+        public static Color available = Color.green;
         public static Color clicked = Color.blue;
-        public static Color onPath = Color.green;
+        public static Color onPath = Color.cyan;
         public static Color attackable = Color.yellow;
         public static Color attackPrepared = Color.red;
     }
@@ -142,7 +142,7 @@ namespace DestinyTactics.GridSystem
                     case ClickState.activated:
                         if (ClickedCell == ActivatedCell) return;
                         // 检查点击cell是否为可攻击cell，如果是直接攻击
-                        if (_attackCells.Contains(ClickedCell) && ClickedCell.correspondingCharacter )
+                        if (_attackCells.Contains(ClickedCell) && ClickedCell.correspondingCharacter)
                         {
                             if (ClickedCell.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type)
                             {
@@ -157,7 +157,7 @@ namespace DestinyTactics.GridSystem
                         else if (_availableCells.Contains(ClickedCell))
                         {
                             if (ClickedCell.correspondingCharacter) break;
-                            
+
                             _path.Clear();
                             ActivatedCell.correspondingCharacter.AP -=
                                 AStar.CalcuPath(AdjacencyList, _path, ActivatedCell, ClickedCell);
@@ -197,11 +197,13 @@ namespace DestinyTactics.GridSystem
 
                         break;
                     case ClickState.unactivated:
-                        if (ClickedCell.correspondingCharacter)
+                        if (ClickedCell.correspondingCharacter &&
+                            ClickedCell.correspondingCharacter.type == CharacterType.Player)
                         {
                             _clickState = ClickState.activated;
                             ActivatedCell = ClickedCell;
                             FindAvailable(ClickedCell, ClickedCell.correspondingCharacter.AP);
+                            FindAttackable(ClickedCell,ClickedCell.correspondingCharacter.attackRange);
                         }
 
                         break;
@@ -225,14 +227,14 @@ namespace DestinyTactics.GridSystem
                         });
 
                         //检测是否可攻击，可攻击则显示准备攻击效果
-                        if (_attackCells.Contains(HoveredCell) && HoveredCell.correspondingCharacter )
+                        if (_attackCells.Contains(HoveredCell) && HoveredCell.correspondingCharacter)
                         {
-                            if(HoveredCell.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type){
+                            if (HoveredCell.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type)
+                            {
                                 var target = HoveredCell.correspondingCharacter;
                                 target.GetComponent<Renderer>().material.color = CellColor.attackPrepared;
                                 ActivatedCell.correspondingCharacter.AttackPrepare();
                             }
-                            
                         }
                         //检测是否可达，可达则计算路径
                         else if (_availableCells.Contains(HoveredCell))
@@ -325,6 +327,17 @@ namespace DestinyTactics.GridSystem
                     a.correspondingCharacter.GetComponent<Renderer>().material.color = Color.yellow;
                 }
             });
+        }
+
+        public void ResetTurn()
+        {
+            _attackCells.Clear();
+            ActivatedCell = null;
+            _clickState = ClickState.unactivated;
+            _path.ForEach((a) => { a.GetComponent<Renderer>().material.color = CellColor.normal;});
+            _availableCells.ForEach((a) => { a.GetComponent<Renderer>().material.color = CellColor.normal;});
+            _path.Clear();
+            _availableCells.Clear();
         }
     }
 }

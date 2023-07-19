@@ -17,7 +17,8 @@ namespace DestinyTactics.Characters
         public int defaultAP;
         public int defaultHP;
         public int defaultAttack;
-        
+        public int defaultAttackRange;
+
         private int _AP;
         private int _health;
         private int _attack;
@@ -25,10 +26,10 @@ namespace DestinyTactics.Characters
 
         public CharacterType type;
         public Cell correspondingCell;
-        private Cell _distination;
+        private Cell _destination;
 
         public bool bCanAttack;
-        
+
         public Action allowInput;
         public Action blockInput;
         public Action<Character> CharacterDead;
@@ -58,7 +59,16 @@ namespace DestinyTactics.Characters
             }
         }
 
-        public int attackRange { get; set; }
+        public int attackRange
+        {
+            get { return _attackRange;}
+        }
+
+        public void Awake()
+        {
+            _destination = correspondingCell;
+            _attackRange = defaultAttackRange;
+        }
 
         public void Start()
         {
@@ -82,7 +92,13 @@ namespace DestinyTactics.Characters
 
         public void Attack(Character target)
         {
-            if (target.type == type) Debug.LogError("同阵营攻击");
+            if (target.type == type)
+            {
+                Debug.LogError("同阵营攻击");
+                return;
+            }
+
+            Debug.Log("attack");
             target.health -= _attack;
             bCanAttack = false;
             AP = 0;
@@ -94,7 +110,7 @@ namespace DestinyTactics.Characters
             blockInput();
             foreach (var cell in path)
             {
-                _distination = cell;
+                _destination = cell;
                 while (correspondingCell != cell)
                 {
                     yield return null;
@@ -109,17 +125,15 @@ namespace DestinyTactics.Characters
             bCanAttack = true;
             _AP = defaultAP;
         }
+
         public void Update()
         {
-            if (_distination)
+            if (_destination.GetLocation() != transform.position - new Vector3(0, 1, 0))
             {
                 transform.position = Vector3.Lerp(transform.position,
-                    _distination.transform.position + new Vector3(0, 1, 0), 0.1f);
+                    _destination.transform.position + new Vector3(0, 1, 0), 0.1f);
+                correspondingCell = _destination;
             }
-
-            correspondingCell = _distination;
         }
-
-        
     }
 }

@@ -16,6 +16,7 @@ namespace DestinyTactics.GridSystem
     public class GameMode:MonoBehaviour
     {
         private GameState _state;
+        public GridSystem gridSystem;
         public AIPlayer AI;
         public void Start()
         {
@@ -25,7 +26,9 @@ namespace DestinyTactics.GridSystem
         public void EndTurn()
         {
             _state = _state == GameState.player ? GameState.AI : GameState.player;
-            if(_state == GameState.AI){
+            if(_state == GameState.AI)
+            {
+                gridSystem.ResetTurn();
                 AI.execute();
             }
             else
