@@ -6,6 +6,8 @@ using DestinyTactics.Characters;
 using DestinyTactics.Cells;
 using DestinyTactics.GridSystem;
 using DestinyTactics.PathFinder;
+using TMPro;
+using UnityEngine.UI;
 
 namespace DestinyTactics.GridSystem
 {
@@ -43,7 +45,7 @@ namespace DestinyTactics.GridSystem
     {
         //邻接矩阵
         public Dictionary<Cell, List<WeightCell>> AdjacencyList;
-
+        public TextMeshProUGUI infoText;
         private ClickState _clickState;
 
         //可达和可攻击节点
@@ -51,10 +53,12 @@ namespace DestinyTactics.GridSystem
         private List<Cell> _attackCells;
         private List<Cell> _path;
         private Cell ActivatedCell;
-
+        
         //所有节点和位置的映射
         private Dictionary<Vector3, Cell> Cells;
         private bool bInput;
+        
+        public Action<Character> ChangeDisplayerCharacterInfo;
 
         public void Awake()
         {
@@ -213,8 +217,14 @@ namespace DestinyTactics.GridSystem
 
         public void OnCellHovered(Cell HoveredCell)
         {
+            if (HoveredCell.correspondingCharacter)
+            {
+                ChangeDisplayerCharacterInfo(HoveredCell.correspondingCharacter);
+            }
+
             if (bInput)
             {
+
                 switch (_clickState)
                 {
                     case ClickState.activated:
@@ -290,6 +300,11 @@ namespace DestinyTactics.GridSystem
                         UnhoveredCell.GetComponent<Renderer>().material.color = CellColor.normal;
                         break;
                 }
+            }
+
+            if (UnhoveredCell.correspondingCharacter && ActivatedCell)
+            {
+                ChangeDisplayerCharacterInfo(ActivatedCell.correspondingCharacter);
             }
         }
 

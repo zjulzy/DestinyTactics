@@ -14,6 +14,7 @@ namespace DestinyTactics.Characters
 
     public class Character : MonoBehaviour
     {
+        public string name;
         public int defaultAP;
         public int defaultHP;
         public int defaultAttack;
@@ -61,7 +62,12 @@ namespace DestinyTactics.Characters
 
         public int attackRange
         {
-            get { return _attackRange;}
+            get { return _attackRange; }
+        }
+
+        public int attack
+        {
+            get { return _attack; }
         }
 
         public void Awake()
