@@ -30,6 +30,7 @@ namespace Players
             {
                 if (character.type == CharacterType.AI)
                 {
+                    //绑定ai棋子的各种事件
                     characters.Add(character);
                     targets.Add(character, null);
                     character.blockInput += () => { bMoving = true; };
@@ -60,7 +61,7 @@ namespace Players
             {
                 availableCells.Clear();
                 enemies.Clear();
-                BFS.FindAvailable(gridSystem.AdjacencyList, availableCells, character.correspondingCell, distince);
+                BFS.FindAttackRange(gridSystem.AdjacencyList, availableCells, character.correspondingCell, distince);
                 availableCells.ForEach((a) =>
                 {
                     if (a.correspondingCharacter && a.correspondingCharacter.type == CharacterType.Player)
@@ -74,7 +75,7 @@ namespace Players
                     enemies.Sort((a, b) => { return a.health - b.health; });
                     targets[character] = enemies[0];
 
-
+                    //能打到就直接攻击，否则抵近后攻击
                     if (AStar.CalculateH(character.correspondingCell, targets[character].correspondingCell) <=
                         character.attackRange)
                     {

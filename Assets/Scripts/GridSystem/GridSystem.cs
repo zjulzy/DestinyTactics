@@ -53,11 +53,11 @@ namespace DestinyTactics.GridSystem
         private List<Cell> _attackCells;
         private List<Cell> _path;
         private Cell ActivatedCell;
-        
+
         //所有节点和位置的映射
         private Dictionary<Vector3, Cell> Cells;
         private bool bInput;
-        
+
         public Action<Character> ChangeDisplayerCharacterInfo;
 
         public void Awake()
@@ -148,13 +148,15 @@ namespace DestinyTactics.GridSystem
                         // 检查点击cell是否为可攻击cell，如果是直接攻击
                         if (_attackCells.Contains(ClickedCell) && ClickedCell.correspondingCharacter)
                         {
-                            if (ClickedCell.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type)
+                            if (ClickedCell.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type &&
+                                ActivatedCell.correspondingCharacter.bCanAttack)
                             {
                                 //攻击目标
                                 Character target = ClickedCell.correspondingCharacter;
                                 ActivatedCell.correspondingCharacter.Attack(target);
-                                //攻击之后直接将行动力清零
-                                ActivatedCell.correspondingCharacter.AP = 0;
+
+                                //退出激活模式
+                                Unactivate();
                             }
                         }
                         //检查点击cell是否为可达cell，如果是移动
@@ -184,19 +186,15 @@ namespace DestinyTactics.GridSystem
                             FindAvailable(ClickedCell, ClickedCell.correspondingCharacter.AP);
 
                             //查询可被攻击的敌人
-                            FindAttackable(ClickedCell, ClickedCell.correspondingCharacter.attackRange);
+                            if (ActivatedCell.correspondingCharacter.bCanAttack)
+                            {
+                                FindAttackable(ClickedCell, ClickedCell.correspondingCharacter.attackRange);
+                            }
                         }
                         else
                         {
                             //退出激活状态
-                            _availableCells.ForEach((a) =>
-                            {
-                                a.transform.GetComponent<Renderer>().material.color = CellColor.normal;
-                            });
-                            _availableCells.Clear();
-                            _attackCells.Clear();
-
-                            _clickState = ClickState.unactivated;
+                            Unactivate();
                         }
 
                         break;
@@ -206,8 +204,13 @@ namespace DestinyTactics.GridSystem
                         {
                             _clickState = ClickState.activated;
                             ActivatedCell = ClickedCell;
+                            ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material
+                                .EnableKeyword("_EMISSION");
                             FindAvailable(ClickedCell, ClickedCell.correspondingCharacter.AP);
-                            FindAttackable(ClickedCell,ClickedCell.correspondingCharacter.attackRange);
+                            if (ActivatedCell.correspondingCharacter.bCanAttack)
+                            {
+                                FindAttackable(ClickedCell, ClickedCell.correspondingCharacter.attackRange);
+                            }
                         }
 
                         break;
@@ -224,7 +227,6 @@ namespace DestinyTactics.GridSystem
 
             if (bInput)
             {
-
                 switch (_clickState)
                 {
                     case ClickState.activated:
@@ -286,13 +288,26 @@ namespace DestinyTactics.GridSystem
                 switch (_clickState)
                 {
                     case ClickState.activated:
-                        if (_availableCells.Contains(UnhoveredCell))
+                        if (UnhoveredCell.correspondingCharacter)
                         {
-                            UnhoveredCell.GetComponent<Renderer>().material.color = CellColor.available;
+                            if (_attackCells.Contains(UnhoveredCell) && UnhoveredCell != ActivatedCell)
+                            {
+                                UnhoveredCell.correspondingCharacter.GetComponent<Renderer>().material
+                                    .DisableKeyword("_EMISSION");
+                                UnhoveredCell.correspondingCharacter.GetComponent<Renderer>().material.color =
+                                    Color.white;
+                            }
                         }
                         else
                         {
-                            UnhoveredCell.GetComponent<Renderer>().material.color = CellColor.normal;
+                            if (_availableCells.Contains(UnhoveredCell))
+                            {
+                                UnhoveredCell.GetComponent<Renderer>().material.color = CellColor.available;
+                            }
+                            else
+                            {
+                                UnhoveredCell.GetComponent<Renderer>().material.color = CellColor.normal;
+                            }
                         }
 
                         break;
@@ -312,6 +327,7 @@ namespace DestinyTactics.GridSystem
 
         #endregion
 
+        #region findpath
 
         public void FindAvailable(Cell start, int AP)
         {
@@ -339,9 +355,35 @@ namespace DestinyTactics.GridSystem
             {
                 if (a.correspondingCharacter && a.correspondingCharacter.type != cell.correspondingCharacter.type)
                 {
-                    a.correspondingCharacter.GetComponent<Renderer>().material.color = Color.yellow;
+                    a.correspondingCharacter.GetComponent<Renderer>().material.EnableKeyword("_EMISSION");
                 }
             });
+        }
+
+        #endregion
+
+
+        protected void Unactivate()
+        {
+            _availableCells.ForEach((a) => { a.transform.GetComponent<Renderer>().material.color = CellColor.normal; });
+            _path.ForEach(a => { a.transform.GetComponent<Renderer>().material.color = CellColor.normal; });
+            _attackCells.ForEach(a =>
+            {
+                if (a.correspondingCharacter &&
+                    a.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type)
+                {
+                    a.correspondingCharacter.GetComponent<Renderer>().material.DisableKeyword("_EMISSION");
+                    a.correspondingCharacter.GetComponent<Renderer>().material.color = Color.white;
+                }
+            });
+            _availableCells.Clear();
+            _attackCells.Clear();
+            _attackCells.Clear();
+
+            _clickState = ClickState.unactivated;
+            ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material.DisableKeyword(
+                "_EMISSION");
+            ActivatedCell = null;
         }
 
         public void ResetTurn()
@@ -349,8 +391,8 @@ namespace DestinyTactics.GridSystem
             _attackCells.Clear();
             ActivatedCell = null;
             _clickState = ClickState.unactivated;
-            _path.ForEach((a) => { a.GetComponent<Renderer>().material.color = CellColor.normal;});
-            _availableCells.ForEach((a) => { a.GetComponent<Renderer>().material.color = CellColor.normal;});
+            _path.ForEach((a) => { a.GetComponent<Renderer>().material.color = CellColor.normal; });
+            _availableCells.ForEach((a) => { a.GetComponent<Renderer>().material.color = CellColor.normal; });
             _path.Clear();
             _availableCells.Clear();
         }

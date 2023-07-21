@@ -14,6 +14,7 @@ namespace UI
         public TextMeshProUGUI attackInfo;
         public TextMeshProUGUI attackRangeInfo;
         public TextMeshProUGUI APInfo;
+        public TextMeshProUGUI canAttackInfo;
         public GridSystem gridSystem;
 
         public void Awake()
@@ -29,6 +30,7 @@ namespace UI
             attackInfo.text = "attack: " + character.attack;
             attackRangeInfo.text = "attackRange: " + character.attackRange;
             APInfo.text = "AP: " + character.AP;
+            canAttackInfo.text = "canattack: " + (character.bCanAttack?"yes":"no");
         }
     }
 }

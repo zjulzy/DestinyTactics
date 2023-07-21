@@ -29,10 +29,12 @@ namespace DestinyTactics.GridSystem
             if(_state == GameState.AI)
             {
                 gridSystem.ResetTurn();
+                gridSystem.OnBlockInput();
                 AI.execute();
             }
             else
             {
+                gridSystem.OnAllowInput();
                 foreach (var character in FindObjectsOfType<Character>())
                 {
                     if (character.type == CharacterType.Player)

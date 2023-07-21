@@ -51,11 +51,12 @@ namespace DestinyTactics.Characters
             set
             {
                 _health = value;
-                if (_health < 0)
+                if (_health <= 0)
                 {
                     _health = 0;
                     CharacterDead(this);
-                    Destroy(this.gameObject);
+                    //TODO:死亡特效和音效
+                    Destroy(gameObject);
                 }
             }
         }
@@ -74,6 +75,7 @@ namespace DestinyTactics.Characters
         {
             _destination = correspondingCell;
             _attackRange = defaultAttackRange;
+            CharacterDead += ((a) => { correspondingCell.correspondingCharacter = null; });
         }
 
         public void Start()
