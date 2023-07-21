@@ -5,7 +5,7 @@ using DestinyTactics.Characters;
 using DestinyTactics.GridSystem;
 using TMPro;
 
-namespace UI
+namespace DestinyTactics.UI
 {
     public class UI : MonoBehaviour
     {
@@ -15,11 +15,26 @@ namespace UI
         public TextMeshProUGUI attackRangeInfo;
         public TextMeshProUGUI APInfo;
         public TextMeshProUGUI canAttackInfo;
-        public GridSystem gridSystem;
+        public TextMeshProUGUI turnInfo;
+        public GridSystem.GridSystem gridSystem;
+        public GameMode gameMode;
 
         public void Awake()
         {
             gridSystem.ChangeDisplayerCharacterInfo += OnChangeDisplayerCharacterInfo;
+            gameMode.ChangeTurn += OnChangeTurn;
+        }
+
+        public void OnChangeTurn(GameState state)
+        {
+            if (state == GameState.AI)
+            {
+                turnInfo.text = "AI turn";
+            }
+            else
+            {
+                turnInfo.text = "Player turn";
+            }
         }
 
         protected void OnChangeDisplayerCharacterInfo(Character character)

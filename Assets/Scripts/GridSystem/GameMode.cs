@@ -12,12 +12,14 @@ namespace DestinyTactics.GridSystem
         player,
         AI
     }
-    
-    public class GameMode:MonoBehaviour
+
+    public class GameMode : MonoBehaviour
     {
         private GameState _state;
         public GridSystem gridSystem;
         public AIPlayer AI;
+        public Action<GameState> ChangeTurn;
+
         public void Start()
         {
             _state = GameState.player;
@@ -25,12 +27,13 @@ namespace DestinyTactics.GridSystem
 
         public void EndTurn()
         {
+            
             _state = _state == GameState.player ? GameState.AI : GameState.player;
-            if(_state == GameState.AI)
+            if (_state == GameState.AI)
             {
                 gridSystem.ResetTurn();
                 gridSystem.OnBlockInput();
-                AI.execute();
+                StartCoroutine(AI.execute());
             }
             else
             {
@@ -43,6 +46,8 @@ namespace DestinyTactics.GridSystem
                     }
                 }
             }
+
+            ChangeTurn(_state);
         }
     }
 }

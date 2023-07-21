@@ -3,6 +3,8 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 using DestinyTactics.Cells;
+using DestinyTactics.UI;
+using UnityEngine.UI;
 
 namespace DestinyTactics.Characters
 {
@@ -33,6 +35,7 @@ namespace DestinyTactics.Characters
 
         public Action allowInput;
         public Action blockInput;
+        public Action<int, int> ChangeHealth;
         public Action<Character> CharacterDead;
 
         public int AP
@@ -51,6 +54,7 @@ namespace DestinyTactics.Characters
             set
             {
                 _health = value;
+                ChangeHealth(value, defaultHP);
                 if (_health <= 0)
                 {
                     _health = 0;
@@ -76,6 +80,7 @@ namespace DestinyTactics.Characters
             _destination = correspondingCell;
             _attackRange = defaultAttackRange;
             CharacterDead += ((a) => { correspondingCell.correspondingCharacter = null; });
+            ChangeHealth += GetComponentInChildren<HealthBar>().OnChangeHealth;
         }
 
         public void Start()
@@ -83,7 +88,12 @@ namespace DestinyTactics.Characters
             _AP = defaultAP;
             bCanAttack = true;
             _attack = defaultAttack;
-            _health = defaultHP;
+            health = defaultHP;
+
+            foreach (var componentsInChild in transform.GetComponentsInChildren<HealthBar>())
+            {
+                componentsInChild.transform.rotation = GameObject.Find("Main Camera").transform.rotation;
+            }
 
             //correspondingCell在editor中设定，不需要在代码中设定
         }
@@ -139,7 +149,7 @@ namespace DestinyTactics.Characters
             if (_destination.GetLocation() != transform.position - new Vector3(0, 1, 0))
             {
                 transform.position = Vector3.Lerp(transform.position,
-                    _destination.transform.position + new Vector3(0, 1, 0), 0.1f);
+                    _destination.transform.position + new Vector3(0, 1, 0), 0.05f);
                 correspondingCell = _destination;
             }
         }

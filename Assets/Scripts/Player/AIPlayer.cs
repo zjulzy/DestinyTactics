@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using DestinyTactics.Cells;
 using DestinyTactics.Characters;
@@ -52,7 +53,7 @@ namespace Players
             }
         }
 
-        public void execute()
+        public IEnumerator execute()
         {
             //为每个character索敌并移动
             List<Cell> availableCells = new List<Cell>();
@@ -110,6 +111,7 @@ namespace Players
 
                         while (bMoving)
                         {
+                            yield return null;
                         }
 
                         if (AStar.CalculateH(character.correspondingCell, targets[character].correspondingCell) <=
@@ -133,6 +135,8 @@ namespace Players
                     destination.correspondingCharacter = character;
                     StartCoroutine(character.Move(destination, path));
                 }
+
+                yield return new WaitForSeconds(1);
             }
 
             gameMode.EndTurn();
