@@ -145,8 +145,24 @@ namespace DestinyTactics.GridSystem
                 {
                     case ClickState.activated:
                         if (ClickedCell == ActivatedCell) return;
+                        if (ClickedCell.correspondingCharacter &&
+                            ClickedCell.correspondingCharacter.type == CharacterType.Player)
+                        {
+                            ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material
+                                .DisableKeyword("_EMISSION");
+                            ActivatedCell = ClickedCell;
+                            ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material
+                                .EnableKeyword("_EMISSION");
+                            
+                            FindAvailable(ClickedCell, ClickedCell.correspondingCharacter.AP);
+                            if (ActivatedCell.correspondingCharacter.bCanAttack)
+                            {
+                                FindAttackable(ClickedCell, ClickedCell.correspondingCharacter.attackRange);
+                            }
+                        }
+
                         // 检查点击cell是否为可攻击cell，如果是直接攻击
-                        if (_attackCells.Contains(ClickedCell) && ClickedCell.correspondingCharacter)
+                        else if (_attackCells.Contains(ClickedCell) && ClickedCell.correspondingCharacter)
                         {
                             if (ClickedCell.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type &&
                                 ActivatedCell.correspondingCharacter.bCanAttack)
@@ -331,6 +347,10 @@ namespace DestinyTactics.GridSystem
 
         public void FindAvailable(Cell start, int AP)
         {
+            _availableCells.ForEach(a =>
+            {
+                a.transform.GetComponent<Renderer>().material.color = CellColor.normal;
+            });
             _availableCells.Clear();
             BFS.FindAvailable(AdjacencyList, _availableCells, start, AP);
             _availableCells.ForEach((a) =>
@@ -349,7 +369,7 @@ namespace DestinyTactics.GridSystem
 
         public void FindAttackable(Cell cell, int attackRange)
         {
-            _attackCells.Clear();
+            ClearAttackable();
             BFS.FindAttackRange(AdjacencyList, _attackCells, cell, attackRange);
             _attackCells.ForEach((a) =>
             {
@@ -372,20 +392,18 @@ namespace DestinyTactics.GridSystem
             ClearAttackable();
 
             _clickState = ClickState.unactivated;
-            ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material.DisableKeyword(
-                "_EMISSION");
+            if (ActivatedCell)
+            {
+                ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material.DisableKeyword(
+                    "_EMISSION");
+            }
+
             ActivatedCell = null;
         }
 
         public void ResetTurn()
         {
-            _attackCells.Clear();
-            if (ActivatedCell)
-            {
-                ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material.DisableKeyword(
-                    "_EMISSION");
-                ActivatedCell = null;
-            }
+            Unactivate();
 
             _clickState = ClickState.unactivated;
             _path.ForEach((a) => { a.GetComponent<Renderer>().material.color = CellColor.normal; });

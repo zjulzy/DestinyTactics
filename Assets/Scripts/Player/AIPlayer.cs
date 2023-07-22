@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DestinyTactics.Cells;
 using DestinyTactics.Characters;
 using DestinyTactics.GridSystem;
@@ -41,12 +42,10 @@ namespace Players
                 {
                     character.CharacterDead += ((c) =>
                     {
-                        foreach (var i in targets.Keys)
+                        for (int i = 0; i < targets.Count; i++)
                         {
-                            if (targets[i] == c)
-                            {
-                                targets[i] = null;
-                            }
+                            if(targets.ElementAt(i).Value==c)
+                                targets[targets.ElementAt(i).Key] = null;
                         }
                     });
                 }

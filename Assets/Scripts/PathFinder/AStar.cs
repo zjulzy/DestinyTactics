@@ -61,7 +61,7 @@ namespace DestinyTactics.PathFinder
                 foreach (var weightCell in adjacencyList[currentCell])
                 {
                     //去除已经遍历或者被占据的节点
-                    if (closeList.Contains(weightCell.cell)||weightCell.cell.correspondingCharacter)
+                    if (closeList.Contains(weightCell.cell)||(weightCell.cell.correspondingCharacter&&weightCell.cell!=destination))
                     {
                         continue;
                     }

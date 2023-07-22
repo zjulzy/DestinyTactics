@@ -25,6 +25,7 @@ namespace DestinyTactics.GridSystem
             _state = GameState.player;
         }
 
+        // ReSharper disable Unity.PerformanceAnalysis
         public void EndTurn()
         {
             
@@ -32,6 +33,13 @@ namespace DestinyTactics.GridSystem
             if (_state == GameState.AI)
             {
                 gridSystem.ResetTurn();
+                foreach (var character in FindObjectsOfType<Character>())
+                {
+                    if (character.type == CharacterType.AI)
+                    {
+                        character.Reset();
+                    }
+                }
                 gridSystem.OnBlockInput();
                 StartCoroutine(AI.execute());
             }
