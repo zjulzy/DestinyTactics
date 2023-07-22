@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using DestinyTactics.Cells;
 using DestinyTactics.Characters;
-using DestinyTactics.GridSystem;
+using DestinyTactics.Systems;
 
 namespace DestinyTactics.PathFinder
 {
@@ -99,8 +99,8 @@ namespace DestinyTactics.PathFinder
         public static int CalculateH(Cell current, Cell destination)
         {
             //曼哈顿距离计算H
-            return System.Math.Abs((int)(current.transform.position.x) - (int)(destination.transform.position.x)) +
-                   System.Math.Abs((int)(current.transform.position.z) - (int)(destination.transform.position.z));
+            return Math.Abs((int)(current.transform.position.x) - (int)(destination.transform.position.x)) +
+                   Math.Abs((int)(current.transform.position.z) - (int)(destination.transform.position.z));
         }
     }
 }

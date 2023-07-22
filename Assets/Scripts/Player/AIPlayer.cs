@@ -5,17 +5,18 @@ using System.Collections.Generic;
 using System.Linq;
 using DestinyTactics.Cells;
 using DestinyTactics.Characters;
-using DestinyTactics.GridSystem;
+using DestinyTactics.Systems;
 using DestinyTactics.PathFinder;
+using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
 
-namespace Players
+namespace DestinyTactics.Players
 {
     public class AIPlayer : MonoBehaviour
     {
         private Dictionary<Character, Character> targets;
         private List<Character> characters;
-        public GridSystem gridSystem;
+        public Systems.GridSystem gridSystem;
         public GameMode gameMode;
         private bool bMoving;
         [Header("ai索敌距离")] public int distince;
@@ -37,6 +38,11 @@ namespace Players
                     targets.Add(character, null);
                     character.blockInput += () => { bMoving = true; };
                     character.allowInput += () => { bMoving = false; };
+                    character.CharacterDead += ((c) =>
+                    {
+                        characters.Remove(c);
+                        targets.Remove(c);
+                    });
                 }
                 else
                 {
@@ -104,7 +110,7 @@ namespace Players
                         {
                             character.correspondingCell.correspondingCharacter = null;
                             finalPath[finalPath.Count - 1].correspondingCharacter = character;
-                            StartCoroutine(character.Move(finalPath[finalPath.Count - 1], finalPath));
+                            character.Move(finalPath[finalPath.Count - 1], finalPath);
 
                         }
 
@@ -132,7 +138,7 @@ namespace Players
                     AStar.CalcuPath(gridSystem.AdjacencyList, path, character.correspondingCell, destination);
                     character.correspondingCell.correspondingCharacter = null;
                     destination.correspondingCharacter = character;
-                    StartCoroutine(character.Move(destination, path));
+                    character.Move(destination, path);
                 }
 
                 yield return new WaitForSeconds(1);
@@ -145,6 +151,15 @@ namespace Players
         {
             characters.Remove(character);
             targets.Remove(character);
+        }
+
+        public void Update()
+        {
+            //查询己方character是否还有剩余，如果没有就直接进入胜利页面
+            if (characters.Count == 0)
+            {
+                SceneManager.LoadSceneAsync("Scenes/VictoryScene");
+            }
         }
     }
 }

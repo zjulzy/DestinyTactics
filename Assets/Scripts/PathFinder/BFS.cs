@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using DestinyTactics.Cells;
-using DestinyTactics.GridSystem;
+using DestinyTactics.Systems;
 
 namespace DestinyTactics.PathFinder
 {

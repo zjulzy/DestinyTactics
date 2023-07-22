@@ -14,6 +14,7 @@ namespace DestinyTactics.Cells
     [Serializable]
     public class Cell : MonoBehaviour
     {
+        public bool bIsObstacle;
         public int aPConsume;
         public Character correspondingCharacter;
 

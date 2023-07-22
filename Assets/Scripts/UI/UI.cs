@@ -2,7 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 using DestinyTactics.Characters;
-using DestinyTactics.GridSystem;
+using DestinyTactics.Systems;
 using TMPro;
 
 namespace DestinyTactics.UI
@@ -16,7 +16,7 @@ namespace DestinyTactics.UI
         public TextMeshProUGUI APInfo;
         public TextMeshProUGUI canAttackInfo;
         public TextMeshProUGUI turnInfo;
-        public GridSystem.GridSystem gridSystem;
+        public Systems.GridSystem gridSystem;
         public GameMode gameMode;
 
         public void Awake()
@@ -25,15 +25,15 @@ namespace DestinyTactics.UI
             gameMode.ChangeTurn += OnChangeTurn;
         }
 
-        public void OnChangeTurn(GameState state)
+        public void OnChangeTurn(GameState state, int roundNum)
         {
             if (state == GameState.AI)
             {
-                turnInfo.text = "AI turn";
+                turnInfo.text = "Round:" + roundNum.ToString() + "  AI turn";
             }
             else
             {
-                turnInfo.text = "Player turn";
+                turnInfo.text = "Round:" + roundNum.ToString() + "  Player turn";
             }
         }
 
@@ -45,7 +45,7 @@ namespace DestinyTactics.UI
             attackInfo.text = "attack: " + character.attack;
             attackRangeInfo.text = "attackRange: " + character.attackRange;
             APInfo.text = "AP: " + character.AP;
-            canAttackInfo.text = "canattack: " + (character.bCanAttack?"yes":"no");
+            canAttackInfo.text = "canattack: " + (character.bCanAttack ? "yes" : "no");
         }
     }
 }

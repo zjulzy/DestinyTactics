@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using DestinyTactics.Cells;
 using DestinyTactics.UI;
+using Unity.VisualScripting;
 using UnityEngine.UI;
 
 namespace DestinyTactics.Characters
@@ -37,6 +38,8 @@ namespace DestinyTactics.Characters
         public Action blockInput;
         public Action<int, int> ChangeHealth;
         public Action<Character> CharacterDead;
+        public Action<Character, Vector3, Vector3> CharacterMove;
+        public Action<Character, Character, int> CharacterAttack;
 
         public int AP
         {
@@ -117,15 +120,24 @@ namespace DestinyTactics.Characters
             }
 
             Debug.Log("attack");
+            CharacterAttack(this, target, attack);
             target.health -= _attack;
             bCanAttack = false;
             AP = 0;
         }
 
-        public IEnumerator Move(Cell destination, List<Cell> path)
+        public void Move(Cell destination, List<Cell> path)
         {
-            //根据path向目的地移动,异步移动
+            StartCoroutine(MoveTorwards(destination, path));
+            CharacterMove(this, transform.position, _destination.transform.position);
+        }
+        
+        //使用协程处理移动
+        protected IEnumerator MoveTorwards(Cell destination, List<Cell> path)
+        {
+            // 根据path向目的地移动,异步移动
             blockInput();
+            
             foreach (var cell in path)
             {
                 _destination = cell;
