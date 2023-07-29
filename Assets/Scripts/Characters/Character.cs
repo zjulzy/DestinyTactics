@@ -3,6 +3,8 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 using DestinyTactics.Cells;
+using DestinyTactics.Characters.Abilities;
+using DestinyTactics.Systems;
 using DestinyTactics.UI;
 using Unity.VisualScripting;
 using UnityEngine.UI;
@@ -17,16 +19,22 @@ namespace DestinyTactics.Characters
 
     public class Character : MonoBehaviour
     {
-        public string name;
+        #region Property
+
+        public string displayName;
         public int defaultAP;
         public int defaultHP;
         public int defaultAttack;
         public int defaultAttackRange;
 
         private int _AP;
+        private int _MP;
         private int _health;
         private int _attack;
         private int _attackRange;
+
+        //角色拥有的ability集合
+        public List<Ability> abilities;
 
         public CharacterType type;
         public Cell correspondingCell;
@@ -51,7 +59,13 @@ namespace DestinyTactics.Characters
             }
         }
 
-        public int health
+        public int MP
+        {
+            get { return _MP; }
+            set { _MP = value; }
+        }
+
+        public int Health
         {
             get { return _health; }
             set
@@ -68,15 +82,18 @@ namespace DestinyTactics.Characters
             }
         }
 
-        public int attackRange
+        public int AttackRange
         {
             get { return _attackRange; }
         }
 
-        public int attack
+        public int AttackValue
         {
             get { return _attack; }
         }
+
+        #endregion
+
 
         public void Awake()
         {
@@ -84,6 +101,14 @@ namespace DestinyTactics.Characters
             _attackRange = defaultAttackRange;
             CharacterDead += ((a) => { correspondingCell.correspondingCharacter = null; });
             ChangeHealth += GetComponentInChildren<HealthBar>().OnChangeHealth;
+            
+            // 为技能设置冷却递减
+            FindObjectOfType<GameMode>().ChangeTurn += (state, b) =>
+            {
+                if (state == GameState.player)
+                    abilities.ForEach(a => { a.coolDown--; });
+            };
+            abilities.ForEach(a => { a.SetOwner(this); });
         }
 
         public void Start()
@@ -91,7 +116,7 @@ namespace DestinyTactics.Characters
             _AP = defaultAP;
             bCanAttack = true;
             _attack = defaultAttack;
-            health = defaultHP;
+            Health = defaultHP;
 
             foreach (var componentsInChild in transform.GetComponentsInChildren<HealthBar>())
             {
@@ -120,8 +145,8 @@ namespace DestinyTactics.Characters
             }
 
             Debug.Log("attack");
-            CharacterAttack(this, target, attack);
-            target.health -= _attack;
+            CharacterAttack(this, target, AttackValue);
+            target.Health -= _attack;
             bCanAttack = false;
             AP = 0;
         }
@@ -131,13 +156,13 @@ namespace DestinyTactics.Characters
             StartCoroutine(MoveTorwards(destination, path));
             CharacterMove(this, transform.position, _destination.transform.position);
         }
-        
+
         //使用协程处理移动
         protected IEnumerator MoveTorwards(Cell destination, List<Cell> path)
         {
             // 根据path向目的地移动,异步移动
             blockInput();
-            
+
             foreach (var cell in path)
             {
                 _destination = cell;

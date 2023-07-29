@@ -11,6 +11,16 @@ namespace DestinyTactics.Cells
         Clicked
     }
 
+    public enum ActivateType
+    {
+        Unactivated,
+        Activated,
+        MoveAvailable,
+        AttackPrepared,
+        AttackTargeted,
+        OnPath
+    }
+
     [Serializable]
     public class Cell : MonoBehaviour
     {
@@ -27,6 +37,8 @@ namespace DestinyTactics.Cells
             return transform.transform.position;
         }
 
+        #region IOEvent
+
         public void OnMouseDown()
         {
             Debug.Log("Cell clicked");
@@ -40,6 +52,8 @@ namespace DestinyTactics.Cells
             Debug.Log("Cell hovered");
             // GetComponent<Renderer>().material.color = GridSystem.CellColor.hover;
             OnCellHover(this);
+            
+            
         }
 
         public void OnMouseExit()
@@ -48,5 +62,16 @@ namespace DestinyTactics.Cells
             // GetComponent<Renderer>().material.color = GridSystem.CellColor.normal;
             OnCellUnHover(this);
         }
+
+        #endregion
+
+        #region Display
+
+        public void ChangeActivateType(ActivateType type)
+        {
+            //TODO: 根据输入值改变激活状态
+        }
+
+        #endregion
     }
 }

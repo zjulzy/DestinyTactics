@@ -78,12 +78,12 @@ namespace DestinyTactics.Players
 
                 if (enemies.Count > 0)
                 {
-                    enemies.Sort((a, b) => { return a.health - b.health; });
+                    enemies.Sort((a, b) => { return a.Health - b.Health; });
                     targets[character] = enemies[0];
 
                     //能打到就直接攻击，否则抵近后攻击
                     if (AStar.CalculateH(character.correspondingCell, targets[character].correspondingCell) <=
-                        character.attackRange)
+                        character.AttackRange)
                     {
                         character.Attack(targets[character]);
                     }
@@ -98,7 +98,7 @@ namespace DestinyTactics.Players
                         foreach (var cell in path)
                         {
                             if ((!availableCells.Contains(cell)) ||
-                                (AStar.CalculateH(cell, targets[character].correspondingCell) < character.attackRange))
+                                (AStar.CalculateH(cell, targets[character].correspondingCell) < character.AttackRange))
                             {
                                 break;
                             }
@@ -120,7 +120,7 @@ namespace DestinyTactics.Players
                         }
 
                         if (AStar.CalculateH(character.correspondingCell, targets[character].correspondingCell) <=
-                            character.attackRange)
+                            character.AttackRange)
                         {
                             character.Attack(targets[character]);
                         }

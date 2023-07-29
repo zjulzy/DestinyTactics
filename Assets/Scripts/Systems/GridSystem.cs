@@ -4,7 +4,9 @@ using System;
 using System.Collections.Generic;
 using DestinyTactics.Characters;
 using DestinyTactics.Cells;
+using DestinyTactics.Characters.Abilities;
 using DestinyTactics.PathFinder;
+using DestinyTactics.UI;
 using TMPro;
 using UnityEngine.UI;
 
@@ -12,13 +14,14 @@ namespace DestinyTactics.Systems
 {
     public enum ClickState
     {
-        unactivated,
-        activated,
+        Unactivated,
+        Activated,
+        AbilitySelected
     }
 
     public static class CellColor
     {
-        public static Color normal = Color.gray;
+        public static Color normal = Color.white;
         public static Color hover = Color.magenta;
         public static Color available = Color.green;
         public static Color clicked = Color.blue;
@@ -52,22 +55,27 @@ namespace DestinyTactics.Systems
         private List<Cell> _attackCells;
         private List<Cell> _path;
         private Cell ActivatedCell;
+        private AbilityUI _abilityUI;
 
         //所有节点和位置的映射
         private Dictionary<Vector3, Cell> Cells;
         private bool bInput;
 
         public Action<Character> ChangeDisplayerCharacterInfo;
+        public Action<Character> OpenAbilityPanel;
+        public Action CloseAbilityPanel;
 
         public void Awake()
         {
-            _clickState = ClickState.unactivated;
+            _clickState = ClickState.Unactivated;
             Cells = new Dictionary<Vector3, Cell>();
             AdjacencyList = new Dictionary<Cell, List<WeightCell>>();
             _path = new List<Cell>();
             _availableCells = new List<Cell>();
             _attackCells = new List<Cell>();
             bInput = true;
+            _abilityUI = FindObjectOfType<AbilityUI>();
+            _abilityUI.SelectedAbility += OnAbilitySelected;
         }
 
         public void Start()
@@ -99,29 +107,33 @@ namespace DestinyTactics.Systems
                 if (Cells.ContainsKey(location + new Vector3(0, 0, -1)) &&
                     !Cells[location + new Vector3(0, 0, -1)].bIsObstacle)
                 {
+                    Cell nextCell = Cells[location + new Vector3(0, 0, -1)];
                     AdjacencyList[currentCell]
-                        .Add(new WeightCell(Cells[location + new Vector3(0, 0, -1)], currentCell.aPConsume));
+                        .Add(new WeightCell(nextCell, Math.Max(currentCell.aPConsume, nextCell.aPConsume)));
                 }
 
                 if (Cells.ContainsKey(location + new Vector3(0, 0, 1)) &&
                     !Cells[location + new Vector3(0, 0, 1)].bIsObstacle)
                 {
+                    Cell nextCell = Cells[location + new Vector3(0, 0, 1)];
                     AdjacencyList[currentCell]
-                        .Add(new WeightCell(Cells[location + new Vector3(0, 0, 1)], currentCell.aPConsume));
+                        .Add(new WeightCell(nextCell, Math.Max(currentCell.aPConsume, nextCell.aPConsume)));
                 }
 
                 if (Cells.ContainsKey(location + new Vector3(-1, 0, 0)) &&
                     !Cells[location + new Vector3(-1, 0, 0)].bIsObstacle)
                 {
+                    Cell nextCell = Cells[location + new Vector3(-1, 0, 0)];
                     AdjacencyList[currentCell]
-                        .Add(new WeightCell(Cells[location + new Vector3(-1, 0, 0)], currentCell.aPConsume));
+                        .Add(new WeightCell(nextCell, Math.Max(currentCell.aPConsume, nextCell.aPConsume)));
                 }
 
                 if (Cells.ContainsKey(location + new Vector3(1, 0, 0)) &&
                     !Cells[location + new Vector3(1, 0, 0)].bIsObstacle)
                 {
+                    Cell nextCell = Cells[location + new Vector3(1, 0, 0)];
                     AdjacencyList[currentCell]
-                        .Add(new WeightCell(Cells[location + new Vector3(1, 0, 0)], currentCell.aPConsume));
+                        .Add(new WeightCell(nextCell, Math.Max(currentCell.aPConsume, nextCell.aPConsume)));
                 }
             }
 
@@ -148,38 +160,25 @@ namespace DestinyTactics.Systems
             {
                 switch (_clickState)
                 {
-                    case ClickState.activated:
+                    case ClickState.Unactivated:
+                        if (ClickedCell.correspondingCharacter &&
+                            ClickedCell.correspondingCharacter.type == CharacterType.Player)
+                        {
+                            //基于点击cell直接进行激活
+                            Activate(ClickedCell);
+                        }
+
+                        break;
+                    case ClickState.Activated:
                         if (ClickedCell == ActivatedCell) return;
                         if (ClickedCell.correspondingCharacter &&
                             ClickedCell.correspondingCharacter.type == CharacterType.Player)
                         {
-                            ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material
-                                .DisableKeyword("_EMISSION");
-                            ActivatedCell = ClickedCell;
-                            ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material
-                                .EnableKeyword("_EMISSION");
-
-                            FindAvailable(ClickedCell, ClickedCell.correspondingCharacter.AP);
-                            if (ActivatedCell.correspondingCharacter.bCanAttack)
-                            {
-                                FindAttackable(ClickedCell, ClickedCell.correspondingCharacter.attackRange);
-                            }
+                            //关闭原有的activatedcell并且重新激活
+                            Unactivate();
+                            Activate(ClickedCell);
                         }
 
-                        // 检查点击cell是否为可攻击cell，如果是直接攻击
-                        else if (_attackCells.Contains(ClickedCell) && ClickedCell.correspondingCharacter)
-                        {
-                            if (ClickedCell.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type &&
-                                ActivatedCell.correspondingCharacter.bCanAttack)
-                            {
-                                //攻击目标
-                                Character target = ClickedCell.correspondingCharacter;
-                                ActivatedCell.correspondingCharacter.Attack(target);
-
-                                //退出激活模式
-                                Unactivate();
-                            }
-                        }
                         //检查点击cell是否为可达cell，如果是移动
                         else if (_availableCells.Contains(ClickedCell))
                         {
@@ -190,26 +189,21 @@ namespace DestinyTactics.Systems
                                 AStar.CalcuPath(AdjacencyList, _path, ActivatedCell, ClickedCell);
                             // ClickedCell.correspondingCharacter.Move(ClickedCell, _path);
                             ActivatedCell.correspondingCharacter.Move(ClickedCell, new List<Cell>(_path));
-                            //将之前的available cell的颜色清空并重新计算
-                            _availableCells.ForEach((a) =>
-                            {
-                                a.transform.GetComponent<Renderer>().material.color = CellColor.normal;
-                            });
-
+                            
                             //转换activatecell
                             ClickedCell.correspondingCharacter = ActivatedCell.correspondingCharacter;
                             ActivatedCell.correspondingCharacter = null;
                             ActivatedCell = ClickedCell;
 
                             //将_path和availablecells状态重置
+                            //将之前的available cell的颜色清空并重新计算
+                            _availableCells.ForEach((a) =>
+                            {
+                                a.transform.GetComponent<Renderer>().material.color = CellColor.normal;
+                            });
                             _path.Clear();
                             FindAvailable(ClickedCell, ClickedCell.correspondingCharacter.AP);
 
-                            //查询可被攻击的敌人
-                            if (ActivatedCell.correspondingCharacter.bCanAttack)
-                            {
-                                FindAttackable(ClickedCell, ClickedCell.correspondingCharacter.attackRange);
-                            }
                         }
                         else
                         {
@@ -218,18 +212,20 @@ namespace DestinyTactics.Systems
                         }
 
                         break;
-                    case ClickState.unactivated:
-                        if (ClickedCell.correspondingCharacter &&
-                            ClickedCell.correspondingCharacter.type == CharacterType.Player)
+                    case ClickState.AbilitySelected:
+                        // 检查点击cell是否为可攻击cell，如果是直接攻击
+                        if (_attackCells.Contains(ClickedCell) && ClickedCell.correspondingCharacter)
                         {
-                            _clickState = ClickState.activated;
-                            ActivatedCell = ClickedCell;
-                            ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material
-                                .EnableKeyword("_EMISSION");
-                            FindAvailable(ClickedCell, ClickedCell.correspondingCharacter.AP);
-                            if (ActivatedCell.correspondingCharacter.bCanAttack)
+                            if (ClickedCell.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type &&
+                                ActivatedCell.correspondingCharacter.bCanAttack)
                             {
-                                FindAttackable(ClickedCell, ClickedCell.correspondingCharacter.attackRange);
+                                //攻击目标
+                                Character target = ClickedCell.correspondingCharacter;
+                                ActivatedCell.correspondingCharacter.abilities[_abilityUI.selectedID]
+                                    .TryActivate(ActivatedCell.correspondingCharacter, target);
+
+                                //退出激活模式
+                                Unactivate();
                             }
                         }
 
@@ -249,7 +245,11 @@ namespace DestinyTactics.Systems
             {
                 switch (_clickState)
                 {
-                    case ClickState.activated:
+                    case ClickState.Unactivated:
+                        HoveredCell.GetComponent<Renderer>().material.color = CellColor.hover;
+                        break;
+                    
+                    case ClickState.Activated:
                         if (HoveredCell == ActivatedCell) break;
 
                         //清空_path并将其颜色还原为available
@@ -257,19 +257,9 @@ namespace DestinyTactics.Systems
                         {
                             a.transform.GetComponent<Renderer>().material.color = CellColor.available;
                         });
-
-                        //检测是否可攻击，可攻击则显示准备攻击效果
-                        if (_attackCells.Contains(HoveredCell) && HoveredCell.correspondingCharacter)
-                        {
-                            if (HoveredCell.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type)
-                            {
-                                var target = HoveredCell.correspondingCharacter;
-                                target.GetComponent<Renderer>().material.color = CellColor.attackPrepared;
-                                ActivatedCell.correspondingCharacter.AttackPrepare();
-                            }
-                        }
+                        
                         //检测是否可达，可达则计算路径
-                        else if (_availableCells.Contains(HoveredCell))
+                        if (_availableCells.Contains(HoveredCell))
                         {
                             if (HoveredCell.correspondingCharacter)
                             {
@@ -294,9 +284,21 @@ namespace DestinyTactics.Systems
                         }
 
                         break;
-                    case ClickState.unactivated:
-                        HoveredCell.GetComponent<Renderer>().material.color = CellColor.hover;
+                    
+                    case ClickState.AbilitySelected:
+                        //检测是否可攻击，可攻击则显示准备攻击效果
+                        if (_attackCells.Contains(HoveredCell) && HoveredCell.correspondingCharacter &&
+                            _abilityUI.selectedID != -1)
+                        {
+                            if (HoveredCell.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type)
+                            {
+                                var target = HoveredCell.correspondingCharacter;
+                                target.GetComponent<Renderer>().material.color = CellColor.attackPrepared;
+                                ActivatedCell.correspondingCharacter.AttackPrepare();
+                            }
+                        }
                         break;
+                    
                 }
             }
         }
@@ -307,16 +309,14 @@ namespace DestinyTactics.Systems
             {
                 switch (_clickState)
                 {
-                    case ClickState.activated:
+                    case ClickState.Unactivated:
+                        UnhoveredCell.GetComponent<Renderer>().material.color = CellColor.normal;
+                        break;
+                    
+                    case ClickState.Activated:
                         if (UnhoveredCell.correspondingCharacter)
                         {
-                            if (_attackCells.Contains(UnhoveredCell) && UnhoveredCell != ActivatedCell)
-                            {
-                                UnhoveredCell.correspondingCharacter.GetComponent<Renderer>().material
-                                    .DisableKeyword("_EMISSION");
-                                UnhoveredCell.correspondingCharacter.GetComponent<Renderer>().material.color =
-                                    Color.white;
-                            }
+                            
                         }
                         else
                         {
@@ -331,8 +331,15 @@ namespace DestinyTactics.Systems
                         }
 
                         break;
-                    case ClickState.unactivated:
-                        UnhoveredCell.GetComponent<Renderer>().material.color = CellColor.normal;
+                    
+                    case ClickState.AbilitySelected:
+                        if (_attackCells.Contains(UnhoveredCell) && UnhoveredCell != ActivatedCell)
+                        {
+                            UnhoveredCell.correspondingCharacter.GetComponent<Renderer>().material
+                                .DisableKeyword("_EMISSION");
+                            UnhoveredCell.correspondingCharacter.GetComponent<Renderer>().material.color =
+                                Color.white;
+                        }
                         break;
                 }
             }
@@ -370,11 +377,13 @@ namespace DestinyTactics.Systems
 
         public void FindAttackable(Cell cell, int attackRange)
         {
+            if (!ActivatedCell) return;
             ClearAttackable();
             BFS.FindAttackRange(AdjacencyList, _attackCells, cell, attackRange);
             _attackCells.ForEach((a) =>
             {
-                if (a.correspondingCharacter && a.correspondingCharacter.type != cell.correspondingCharacter.type)
+                if (a.correspondingCharacter &&
+                    a.correspondingCharacter.type != cell.correspondingCharacter.type)
                 {
                     a.correspondingCharacter.GetComponent<Renderer>().material.EnableKeyword("_EMISSION");
                 }
@@ -392,21 +401,49 @@ namespace DestinyTactics.Systems
             _path.Clear();
             ClearAttackable();
 
-            _clickState = ClickState.unactivated;
+            _clickState = ClickState.Unactivated;
             if (ActivatedCell)
             {
                 ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material.DisableKeyword(
                     "_EMISSION");
             }
 
+            CloseAbilityPanel();
             ActivatedCell = null;
         }
+
+        protected void Activate(Cell activateCell)
+        {
+            ActivatedCell = activateCell;
+            _clickState = ClickState.Activated;
+            ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material
+                .EnableKeyword("_EMISSION");
+            OpenAbilityPanel(activateCell.correspondingCharacter);
+            FindAvailable(activateCell, activateCell.correspondingCharacter.AP);
+        }
+
+        protected void OnAbilitySelected(int id)
+        {
+            if (id != -1)
+            {
+                FindAttackable(ActivatedCell, id);
+            }
+
+            else
+            {
+                _clickState = ClickState.Activated;
+                _attackCells.Clear();
+            }
+
+
+        }
+        
 
         public void ResetTurn()
         {
             Unactivate();
 
-            _clickState = ClickState.unactivated;
+            _clickState = ClickState.Unactivated;
             _path.ForEach((a) => { a.GetComponent<Renderer>().material.color = CellColor.normal; });
             _availableCells.ForEach((a) => { a.GetComponent<Renderer>().material.color = CellColor.normal; });
             _path.Clear();

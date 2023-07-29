@@ -41,9 +41,9 @@ namespace DestinyTactics.UI
         {
             Debug.Log("UI:OnChangeDisplayerCharacterInfo");
             nameInfo.text = "name: " + character.name;
-            healthInfo.text = "health: " + character.health;
-            attackInfo.text = "attack: " + character.attack;
-            attackRangeInfo.text = "attackRange: " + character.attackRange;
+            healthInfo.text = "health: " + character.Health;
+            attackInfo.text = "attack: " + character.AttackValue;
+            attackRangeInfo.text = "attackRange: " + character.AttackRange;
             APInfo.text = "AP: " + character.AP;
             canAttackInfo.text = "canattack: " + (character.bCanAttack ? "yes" : "no");
         }

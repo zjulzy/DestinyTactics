@@ -10,6 +10,11 @@ namespace GridSystem.Players
     {
         private List<Character> _characters;
 
+        public void Awake()
+        {
+            _characters = new List<Character>();
+        }
+
         public void Start()
         {
             foreach (var character in FindObjectsOfType<Character>())
