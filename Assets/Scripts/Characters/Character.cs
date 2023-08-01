@@ -47,6 +47,7 @@ namespace DestinyTactics.Characters
         public Action allowInput;
         public Action blockInput;
         public Action<int, int> ChangeHealth;
+        public Action<int, int> ChangeMP;
         public Action<Character> CharacterDead;
         public Action<Character, Vector3, Vector3> CharacterMove;
         public Action<Character, Character, int> CharacterAttack;
@@ -64,7 +65,11 @@ namespace DestinyTactics.Characters
         public int MP
         {
             get { return _MP; }
-            set { _MP = value; }
+            set
+            {
+                _MP = value; 
+                ChangeMP(value,defaultMP);
+            }
         }
 
         public int Health
@@ -103,6 +108,7 @@ namespace DestinyTactics.Characters
             _attackRange = defaultAttackRange;
             CharacterDead += ((a) => { correspondingCell.correspondingCharacter = null; });
             ChangeHealth += GetComponentInChildren<HealthBar>().OnChangeHealth;
+            ChangeMP += GetComponentInChildren<HealthBar>().OnChangeMP;
 
             abilities = new List<Ability>();
             abilityTypes.ForEach(a =>

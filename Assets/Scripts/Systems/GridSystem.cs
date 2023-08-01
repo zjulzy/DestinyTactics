@@ -171,7 +171,8 @@ namespace DestinyTactics.Systems
                 {
                     case ClickState.Unactivated:
                         if (ClickedCell.correspondingCharacter &&
-                            ClickedCell.correspondingCharacter.type == CharacterType.Player)
+                            ClickedCell.correspondingCharacter.type == CharacterType.Player&&
+                            ClickedCell.correspondingCharacter.bCanAttack)
                         {
                             //基于点击cell直接进行激活
                             Activate(ClickedCell);
@@ -226,11 +227,17 @@ namespace DestinyTactics.Systems
                             {
                                 //攻击目标
                                 Character target = ClickedCell.correspondingCharacter;
-                                ActivatedCell.correspondingCharacter.abilities[_abilityUI.selectedID]
+                                var res = ActivatedCell.correspondingCharacter.abilities[_abilityUI.selectedID]
                                     .TryActivate(ActivatedCell.correspondingCharacter, target);
-                                ClearAttackable();
-                                //退出激活模式
-                                Unactivate();
+                                // 需要检查技能激活结果，如果失败则不退出状态
+                                if (res)
+                                {
+                                    ClearAttackable();
+                                    //退出激活模式
+                                    Unactivate();
+                                }
+
+                                
                             }
                         }
                         else if(!_availableCells.Contains(ClickedCell))

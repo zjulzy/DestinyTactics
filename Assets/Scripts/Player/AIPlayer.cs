@@ -80,12 +80,15 @@ namespace DestinyTactics.Players
                 {
                     enemies.Sort((a, b) => { return a.Health - b.Health; });
                     targets[character] = enemies[0];
-
+                    // 随机选择一种能力，并基于该能力的攻击距离向敌方移动
+                    // TODO: AI玩家智能选择技能
+                    var ability = character.abilities[Random.Range(0, character.abilities.Count)];
+                    
                     //能打到就直接攻击，否则抵近后攻击
                     if (AStar.CalculateH(character.correspondingCell, targets[character].correspondingCell) <=
-                        character.AttackRange)
+                        ability.attackRange)
                     {
-                        character.Attack(targets[character],character.AttackValue);
+                        ability.TryActivate(character, targets[character]);
                     }
                     else
                     {
@@ -98,7 +101,7 @@ namespace DestinyTactics.Players
                         foreach (var cell in path)
                         {
                             if ((!availableCells.Contains(cell)) ||
-                                (AStar.CalculateH(cell, targets[character].correspondingCell) < character.AttackRange))
+                                (AStar.CalculateH(cell, targets[character].correspondingCell) < ability.attackRange))
                             {
                                 break;
                             }
@@ -120,9 +123,9 @@ namespace DestinyTactics.Players
                         }
 
                         if (AStar.CalculateH(character.correspondingCell, targets[character].correspondingCell) <=
-                            character.AttackRange)
+                            ability.attackRange)
                         {
-                            character.Attack(targets[character],character.AttackValue);
+                            ability.TryActivate(character, targets[character]);
                         }
                     }
                 }
