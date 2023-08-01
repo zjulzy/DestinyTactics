@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DestinyTactics.Characters;
 using DestinyTactics.Characters.Abilities;
 using DestinyTactics.Systems;
+using TMPro;
 using UnityEngine;
 
 namespace DestinyTactics.UI
@@ -21,12 +22,19 @@ namespace DestinyTactics.UI
             _abilities = new List<Ability>();
             gridSystem.OpenAbilityPanel += OnOpenAbilityPanel;
             gridSystem.CloseAbilityPanel += OnCloseAbilityPanel;
+            
+            // 在开始时需要使技能面板不可见
+            GetComponent<CanvasGroup>().alpha = 0;
         }
         
-        //修改技能面板上的按钮，需要传入一个新的技能列表
+        // <summary>
+        // 修改技能面板上的按钮，需要传入一个新的技能列表
+        // 根据技能内容实例化技能按钮
+        // </summary>
         public void OnOpenAbilityPanel(Character character)
         {
-            // TODO:初始化技能面板
+            // 使技能面板可见
+            GetComponent<CanvasGroup>().alpha = 1;
             _abilities = character.abilities;
             var list = transform.GetComponentsInChildren<AbilityButton>();
             foreach (var button in list)
@@ -38,31 +46,34 @@ namespace DestinyTactics.UI
             _abilities.ForEach(a =>
             {
                 GameObject newButton = Instantiate(abilityButtonPrefab, transform);
-                newButton.GetComponent<AbilityButton>().id = id;
+                newButton.GetComponentInChildren<TextMeshProUGUI>().text = a.displayName;
+                newButton.GetComponentInChildren<AbilityButton>().id = id;
                 id++;
             });
             selectedID = -1;
+            GameObject newButton = Instantiate(abilityButtonPrefab, transform);
+            newButton.GetComponentInChildren<TextMeshProUGUI>().text = "取消技能";
+            newButton.GetComponentInChildren<AbilityButton>().id = -1;
         }
 
         public void OnCloseAbilityPanel()
         {
             GetComponent<CanvasGroup>().alpha = 0;
             //销毁旧的子对象
-            foreach (var trans in transform.GetComponentsInChildren<Transform>())
+            foreach (var trans in transform.GetComponentsInChildren<AbilityButton>())
             {
-                Destroy(trans);
+                Destroy(trans.gameObject);
             }
-            _abilities.Clear();
         }
 
         public void OnActivateAbility(int id)
         {
             selectedID = id;
+            SelectedAbility(selectedID);
         }
 
         private void ClearData()
         {
-            _abilities.Clear();
             selectedID = -1;
         }
 

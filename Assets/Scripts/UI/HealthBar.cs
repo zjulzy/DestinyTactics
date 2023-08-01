@@ -14,9 +14,13 @@ namespace DestinyTactics.UI
             var canvas = (RectTransform)transform.Find("Canvas");
             var imageBackground = (RectTransform)canvas.Find("Image_background");
             var imageFill = (RectTransform)canvas.Find("Image_fill");
-            imageBackground.sizeDelta = new Vector2((float)defaultHealth/50, imageBackground.sizeDelta.y);
-            canvas.sizeDelta = new Vector2((float)defaultHealth/50, canvas.sizeDelta.y);
-            imageFill.sizeDelta = new Vector2((float)health/50, imageFill.sizeDelta.y);
+            imageBackground.sizeDelta = new Vector2((float)defaultHealth / 50, imageBackground.sizeDelta.y);
+            canvas.sizeDelta = new Vector2((float)defaultHealth / 50, canvas.sizeDelta.y);
+            imageFill.sizeDelta = new Vector2((float)health / 50, imageFill.sizeDelta.y);
+        }
+
+        public void OnChangeMP(int MP, int defaultMp)
+        {
         }
     }
 }

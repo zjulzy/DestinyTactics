@@ -85,7 +85,7 @@ namespace DestinyTactics.Players
                     if (AStar.CalculateH(character.correspondingCell, targets[character].correspondingCell) <=
                         character.AttackRange)
                     {
-                        character.Attack(targets[character]);
+                        character.Attack(targets[character],character.AttackValue);
                     }
                     else
                     {
@@ -122,7 +122,7 @@ namespace DestinyTactics.Players
                         if (AStar.CalculateH(character.correspondingCell, targets[character].correspondingCell) <=
                             character.AttackRange)
                         {
-                            character.Attack(targets[character]);
+                            character.Attack(targets[character],character.AttackValue);
                         }
                     }
                 }

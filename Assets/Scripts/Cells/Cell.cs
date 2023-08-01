@@ -2,25 +2,11 @@ using UnityEngine;
 using System.Collections;
 using System;
 using DestinyTactics.Characters;
+using DestinyTactics.Systems;
+using UnityEngine.EventSystems;
 
 namespace DestinyTactics.Cells
 {
-    public enum CellType
-    {
-        Normal,
-        Clicked
-    }
-
-    public enum ActivateType
-    {
-        Unactivated,
-        Activated,
-        MoveAvailable,
-        AttackPrepared,
-        AttackTargeted,
-        OnPath
-    }
-
     [Serializable]
     public class Cell : MonoBehaviour
     {
@@ -37,14 +23,21 @@ namespace DestinyTactics.Cells
             return transform.transform.position;
         }
 
+        public void Awake()
+        {
+            var gridSystem = FindObjectOfType<Systems.GridSystem>();
+            GetComponentInChildren<Grid>().Unactivate();
+        }
+
         #region IOEvent
 
         public void OnMouseDown()
         {
+            if (EventSystem.current.IsPointerOverGameObject()) return;
+
             Debug.Log("Cell clicked");
 
             OnCellClick(this);
-            
         }
 
         public void OnMouseEnter()
@@ -52,8 +45,6 @@ namespace DestinyTactics.Cells
             Debug.Log("Cell hovered");
             // GetComponent<Renderer>().material.color = GridSystem.CellColor.hover;
             OnCellHover(this);
-            
-            
         }
 
         public void OnMouseExit()
@@ -67,9 +58,28 @@ namespace DestinyTactics.Cells
 
         #region Display
 
-        public void ChangeActivateType(ActivateType type)
+        public void ChangeCellType(CellState type)
         {
             //TODO: 根据输入值改变激活状态
+            var grid = GetComponentInChildren<Grid>();
+            switch (type)
+            {
+                case CellState.Activated:
+                    break;
+                case CellState.Normal:
+                    grid.Unactivate();
+                    transform.GetComponent<Renderer>().material.color = Color.white;
+                    break;
+                case CellState.Available:
+                    grid.Activate();
+                    break;
+                case CellState.OnPath:
+                    grid.ActivatePath();
+                    break;
+                case CellState.Hovered:
+                    transform.GetComponent<Renderer>().material.color = Color.red;
+                    break;
+            }
         }
 
         #endregion

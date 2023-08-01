@@ -308,11 +308,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3f93a39bc4d4a86a06652899aa014ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  name: enemy2
+  displayName: "AI\u89D2\u8272"
   defaultAP: 10
   defaultHP: 100
+  defaultMP: 10
   defaultAttack: 20
   defaultAttackRange: 3
+  abilities: []
+  abilityTypes: 
   type: 1
   correspondingCell: {fileID: 0}
   bCanAttack: 1

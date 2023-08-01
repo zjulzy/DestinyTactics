@@ -21,13 +21,22 @@ namespace DestinyTactics.Systems
 
     public static class CellColor
     {
-        public static Color normal = Color.white;
-        public static Color hover = Color.magenta;
-        public static Color available = Color.green;
-        public static Color clicked = Color.blue;
-        public static Color onPath = Color.cyan;
-        public static Color attackable = Color.yellow;
         public static Color attackPrepared = Color.red;
+    }
+
+    public enum CellState
+    {
+        Normal,
+        Activated,
+        Hovered,
+        Available,
+        OnPath,
+    }
+
+    public enum CharacterState
+    {
+        Normal,
+        AttackPrepared,
     }
 
     public struct WeightCell
@@ -189,7 +198,7 @@ namespace DestinyTactics.Systems
                                 AStar.CalcuPath(AdjacencyList, _path, ActivatedCell, ClickedCell);
                             // ClickedCell.correspondingCharacter.Move(ClickedCell, _path);
                             ActivatedCell.correspondingCharacter.Move(ClickedCell, new List<Cell>(_path));
-                            
+
                             //转换activatecell
                             ClickedCell.correspondingCharacter = ActivatedCell.correspondingCharacter;
                             ActivatedCell.correspondingCharacter = null;
@@ -197,13 +206,9 @@ namespace DestinyTactics.Systems
 
                             //将_path和availablecells状态重置
                             //将之前的available cell的颜色清空并重新计算
-                            _availableCells.ForEach((a) =>
-                            {
-                                a.transform.GetComponent<Renderer>().material.color = CellColor.normal;
-                            });
+                            _availableCells.ForEach((a) => { a.ChangeCellType(CellState.Normal); });
                             _path.Clear();
                             FindAvailable(ClickedCell, ClickedCell.correspondingCharacter.AP);
-
                         }
                         else
                         {
@@ -223,12 +228,16 @@ namespace DestinyTactics.Systems
                                 Character target = ClickedCell.correspondingCharacter;
                                 ActivatedCell.correspondingCharacter.abilities[_abilityUI.selectedID]
                                     .TryActivate(ActivatedCell.correspondingCharacter, target);
-
+                                ClearAttackable();
                                 //退出激活模式
                                 Unactivate();
                             }
                         }
-
+                        else if(!_availableCells.Contains(ClickedCell))
+                        {
+                            //退出激活模式
+                            Unactivate();
+                        }
                         break;
                 }
             }
@@ -246,27 +255,21 @@ namespace DestinyTactics.Systems
                 switch (_clickState)
                 {
                     case ClickState.Unactivated:
-                        HoveredCell.GetComponent<Renderer>().material.color = CellColor.hover;
+                        HoveredCell.ChangeCellType(CellState.Hovered);
                         break;
-                    
+
                     case ClickState.Activated:
                         if (HoveredCell == ActivatedCell) break;
 
                         //清空_path并将其颜色还原为available
-                        _path.ForEach((a) =>
-                        {
-                            a.transform.GetComponent<Renderer>().material.color = CellColor.available;
-                        });
-                        
+                        _path.ForEach((a) => { a.ChangeCellType(CellState.Available); });
+
                         //检测是否可达，可达则计算路径
                         if (_availableCells.Contains(HoveredCell))
                         {
                             if (HoveredCell.correspondingCharacter)
                             {
-                                _path.ForEach((a) =>
-                                {
-                                    a.transform.GetComponent<Renderer>().material.color = CellColor.available;
-                                });
+                                _path.ForEach((a) => { a.ChangeCellType(CellState.Available); });
                                 _path.Clear();
                             }
                             else
@@ -276,15 +279,12 @@ namespace DestinyTactics.Systems
                         }
                         else
                         {
-                            _path.ForEach((a) =>
-                            {
-                                a.transform.GetComponent<Renderer>().material.color = CellColor.available;
-                            });
+                            _path.ForEach((a) => { a.ChangeCellType(CellState.Available); });
                             _path.Clear();
                         }
 
                         break;
-                    
+
                     case ClickState.AbilitySelected:
                         //检测是否可攻击，可攻击则显示准备攻击效果
                         if (_attackCells.Contains(HoveredCell) && HoveredCell.correspondingCharacter &&
@@ -297,8 +297,8 @@ namespace DestinyTactics.Systems
                                 ActivatedCell.correspondingCharacter.AttackPrepare();
                             }
                         }
+
                         break;
-                    
                 }
             }
         }
@@ -310,28 +310,27 @@ namespace DestinyTactics.Systems
                 switch (_clickState)
                 {
                     case ClickState.Unactivated:
-                        UnhoveredCell.GetComponent<Renderer>().material.color = CellColor.normal;
+                        UnhoveredCell.ChangeCellType(CellState.Normal);
                         break;
-                    
+
                     case ClickState.Activated:
                         if (UnhoveredCell.correspondingCharacter)
                         {
-                            
                         }
                         else
                         {
                             if (_availableCells.Contains(UnhoveredCell))
                             {
-                                UnhoveredCell.GetComponent<Renderer>().material.color = CellColor.available;
+                                UnhoveredCell.ChangeCellType(CellState.Available);
                             }
                             else
                             {
-                                UnhoveredCell.GetComponent<Renderer>().material.color = CellColor.normal;
+                                UnhoveredCell.ChangeCellType(CellState.Normal);
                             }
                         }
 
                         break;
-                    
+
                     case ClickState.AbilitySelected:
                         if (_attackCells.Contains(UnhoveredCell) && UnhoveredCell != ActivatedCell)
                         {
@@ -340,6 +339,7 @@ namespace DestinyTactics.Systems
                             UnhoveredCell.correspondingCharacter.GetComponent<Renderer>().material.color =
                                 Color.white;
                         }
+
                         break;
                 }
             }
@@ -358,13 +358,10 @@ namespace DestinyTactics.Systems
 
         public void FindAvailable(Cell start, int AP)
         {
-            _availableCells.ForEach(a => { a.transform.GetComponent<Renderer>().material.color = CellColor.normal; });
+            _availableCells.ForEach(a => { a.ChangeCellType(CellState.Normal); });
             _availableCells.Clear();
             BFS.FindAvailable(AdjacencyList, _availableCells, start, AP);
-            _availableCells.ForEach((a) =>
-            {
-                a.transform.GetComponent<Renderer>().material.color = CellColor.available;
-            });
+            _availableCells.ForEach((a) => { a.ChangeCellType(CellState.Available); });
         }
 
         public void FindPath(Cell start, Cell destination)
@@ -372,7 +369,7 @@ namespace DestinyTactics.Systems
             _path.Clear();
 
             AStar.CalcuPath(AdjacencyList, _path, start, destination);
-            _path.ForEach((a) => { a.transform.GetComponent<Renderer>().material.color = CellColor.onPath; });
+            _path.ForEach((a) => { a.ChangeCellType(CellState.OnPath); });
         }
 
         public void FindAttackable(Cell cell, int attackRange)
@@ -395,8 +392,8 @@ namespace DestinyTactics.Systems
 
         protected void Unactivate()
         {
-            _availableCells.ForEach((a) => { a.transform.GetComponent<Renderer>().material.color = CellColor.normal; });
-            _path.ForEach(a => { a.transform.GetComponent<Renderer>().material.color = CellColor.normal; });
+            _availableCells.ForEach((a) => { a.ChangeCellType(CellState.Normal); });
+            _path.ForEach(a => { a.ChangeCellType(CellState.Normal); });
             _availableCells.Clear();
             _path.Clear();
             ClearAttackable();
@@ -426,26 +423,25 @@ namespace DestinyTactics.Systems
         {
             if (id != -1)
             {
-                FindAttackable(ActivatedCell, id);
+                FindAttackable(ActivatedCell, ActivatedCell.correspondingCharacter.abilities[id].attackRange);
+                _clickState = ClickState.AbilitySelected;
             }
 
             else
             {
                 _clickState = ClickState.Activated;
-                _attackCells.Clear();
+                ClearAttackable();
             }
-
-
         }
-        
+
 
         public void ResetTurn()
         {
             Unactivate();
 
             _clickState = ClickState.Unactivated;
-            _path.ForEach((a) => { a.GetComponent<Renderer>().material.color = CellColor.normal; });
-            _availableCells.ForEach((a) => { a.GetComponent<Renderer>().material.color = CellColor.normal; });
+            _path.ForEach((a) => { a.ChangeCellType(CellState.Normal); });
+            _availableCells.ForEach((a) => { a.ChangeCellType(CellState.Normal); });
             _path.Clear();
             _availableCells.Clear();
         }

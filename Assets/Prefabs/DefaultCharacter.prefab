@@ -149,14 +149,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3f93a39bc4d4a86a06652899aa014ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  name: 
+  displayName: "\u73A9\u5BB6\u89D2\u8272"
   defaultAP: 10
-  defaultHP: 0
+  defaultHP: 100
+  defaultMP: 10
   defaultAttack: 30
   defaultAttackRange: 0
+  abilities: []
+  abilityTypes: 0000000001000000
   type: 0
   correspondingCell: {fileID: 0}
-  bCanAttack: 0
+  bCanAttack: 1
 --- !u!33 &9140884413004582262
 MeshFilter:
   m_ObjectHideFlags: 0

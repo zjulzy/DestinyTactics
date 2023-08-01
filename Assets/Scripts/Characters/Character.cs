@@ -24,6 +24,7 @@ namespace DestinyTactics.Characters
         public string displayName;
         public int defaultAP;
         public int defaultHP;
+        public int defaultMP;
         public int defaultAttack;
         public int defaultAttackRange;
 
@@ -35,6 +36,7 @@ namespace DestinyTactics.Characters
 
         //角色拥有的ability集合
         public List<Ability> abilities;
+        public List<AbilityType> abilityTypes;
 
         public CharacterType type;
         public Cell correspondingCell;
@@ -101,14 +103,22 @@ namespace DestinyTactics.Characters
             _attackRange = defaultAttackRange;
             CharacterDead += ((a) => { correspondingCell.correspondingCharacter = null; });
             ChangeHealth += GetComponentInChildren<HealthBar>().OnChangeHealth;
-            
+
+            abilities = new List<Ability>();
+            abilityTypes.ForEach(a =>
+            {
+                Type t = AbilityMapping.Mapping[a];
+                var ability = (Ability)t.GetConstructor(new Type[] { }).Invoke(new object[] { });
+                ability.SetOwner(this);
+                abilities.Add(ability);
+            });
+
             // 为技能设置冷却递减
             FindObjectOfType<GameMode>().ChangeTurn += (state, b) =>
             {
                 if (state == GameState.player)
                     abilities.ForEach(a => { a.coolDown--; });
             };
-            abilities.ForEach(a => { a.SetOwner(this); });
         }
 
         public void Start()
@@ -117,6 +127,7 @@ namespace DestinyTactics.Characters
             bCanAttack = true;
             _attack = defaultAttack;
             Health = defaultHP;
+            MP = defaultMP;
 
             foreach (var componentsInChild in transform.GetComponentsInChildren<HealthBar>())
             {
@@ -136,7 +147,7 @@ namespace DestinyTactics.Characters
             //TODO:进入准备攻击状态
         }
 
-        public void Attack(Character target)
+        public void Attack(Character target, int attackValue)
         {
             if (target.type == type)
             {
@@ -145,7 +156,7 @@ namespace DestinyTactics.Characters
             }
 
             Debug.Log("attack");
-            CharacterAttack(this, target, AttackValue);
+            CharacterAttack(this, target, attackValue);
             target.Health -= _attack;
             bCanAttack = false;
             AP = 0;

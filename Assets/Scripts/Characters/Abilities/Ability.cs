@@ -1,16 +1,37 @@
+using System;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine.Rendering;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace DestinyTactics.Characters.Abilities
 {
-    [System.Serializable]
+    [Serializable]
+    public enum AbilityType
+    {
+        SimpleAttack,
+        FireBall
+    }
+
+    public static class AbilityMapping
+    {
+        public static Dictionary<AbilityType, Type> Mapping = new Dictionary<AbilityType, Type> {
+            {AbilityType.SimpleAttack, typeof(AttackAbility)},
+            { AbilityType.FireBall ,typeof(FireBall)},
+        };
+    }
+
+    [Serializable]
     public class Ability
     {
         public string displayName;
         public int coolDown;
         public int attackRange;
+        public float attackRatio;
+
         private int _currentCoolDown;
+
         // 技能的mp消耗
         public int mPConsume;
         protected Character _owner;
@@ -27,9 +48,11 @@ namespace DestinyTactics.Characters.Abilities
         }
 
         #region AbilityLifeCycle
-
+        
+        // <summary>
         // 对target激活技能,该类的派生类会继承这个函数并实现各自逻辑
         // 同时根据是否能够成功激活技能返回一个bool值
+        // </summary>
         public virtual bool TryActivate(Character insighter, Character target)
         {
             return CommitCost();
@@ -52,6 +75,7 @@ namespace DestinyTactics.Characters.Abilities
         // 用于技能耗费MP的扣除
         public virtual bool CommitCost()
         {
+            _owner.MP -= mPConsume;
             return true;
         }
 

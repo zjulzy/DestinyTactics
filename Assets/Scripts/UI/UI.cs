@@ -43,7 +43,7 @@ namespace DestinyTactics.UI
             nameInfo.text = "name: " + character.name;
             healthInfo.text = "health: " + character.Health;
             attackInfo.text = "attack: " + character.AttackValue;
-            attackRangeInfo.text = "attackRange: " + character.AttackRange;
+            attackRangeInfo.text = "attackRange: " + 0;
             APInfo.text = "AP: " + character.AP;
             canAttackInfo.text = "canattack: " + (character.bCanAttack ? "yes" : "no");
         }
