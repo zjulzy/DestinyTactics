@@ -2,12 +2,15 @@ using UnityEngine;
 using System.Collections;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using DestinyTactics.Cells;
 using DestinyTactics.Characters.Abilities;
 using DestinyTactics.Systems;
 using DestinyTactics.UI;
 using Unity.VisualScripting;
 using UnityEngine.UI;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 namespace DestinyTactics.Characters
 {
@@ -34,8 +37,8 @@ namespace DestinyTactics.Characters
         private int _attack;
         private int _attackRange;
 
-        //角色拥有的ability集合
-        public List<Ability> abilities;
+        // 角色拥有的ability集合
+        [System.NonSerialized] public List<Ability> abilities;
         public List<AbilityType> abilityTypes;
 
         public CharacterType type;
@@ -52,6 +55,8 @@ namespace DestinyTactics.Characters
         public Action<Character, Vector3, Vector3> CharacterMove;
         public Action<Character, Character, int> CharacterAttack;
 
+        private Animator _animator;
+
         public int AP
         {
             get { return _AP; }
@@ -67,8 +72,8 @@ namespace DestinyTactics.Characters
             get { return _MP; }
             set
             {
-                _MP = value; 
-                ChangeMP(value,defaultMP);
+                _MP = value;
+                ChangeMP(value, defaultMP);
             }
         }
 
@@ -104,10 +109,12 @@ namespace DestinyTactics.Characters
 
         public void Awake()
         {
+            _animator = GetComponent<Animator>();
             _destination = correspondingCell;
             _attackRange = defaultAttackRange;
             CharacterDead += ((a) => { correspondingCell.correspondingCharacter = null; });
             ChangeHealth += GetComponentInChildren<HealthBar>().OnChangeHealth;
+            CharacterDead += ((a) => { _animator.SetTrigger("Dead");});
             ChangeMP += GetComponentInChildren<HealthBar>().OnChangeMP;
 
             abilities = new List<Ability>();
@@ -135,11 +142,6 @@ namespace DestinyTactics.Characters
             Health = defaultHP;
             MP = defaultMP;
 
-            foreach (var componentsInChild in transform.GetComponentsInChildren<HealthBar>())
-            {
-                componentsInChild.transform.rotation = GameObject.Find("Main Camera").transform.rotation;
-            }
-
             //correspondingCell在editor中设定，不需要在代码中设定
         }
 
@@ -162,6 +164,7 @@ namespace DestinyTactics.Characters
             }
 
             Debug.Log("attack");
+            _animator.SetTrigger("IsAttacking");
             CharacterAttack(this, target, attackValue);
             target.Health -= _attack;
             bCanAttack = false;
@@ -179,6 +182,7 @@ namespace DestinyTactics.Characters
         {
             // 根据path向目的地移动,异步移动
             blockInput();
+            _animator.SetBool("IsMoving", true);
 
             foreach (var cell in path)
             {
@@ -189,7 +193,13 @@ namespace DestinyTactics.Characters
                 }
             }
 
+            _animator.SetBool("IsMoving", false);
             allowInput();
+        }
+
+        public void BeAttacked()
+        {
+            _animator.SetTrigger("IsAttacked");
         }
 
         public void Reset()
@@ -202,8 +212,20 @@ namespace DestinyTactics.Characters
         {
             if (_destination.GetLocation() != transform.position - new Vector3(0, 1, 0))
             {
-                transform.position = Vector3.Lerp(transform.position,
-                    _destination.transform.position + new Vector3(0, 1, 0), 0.05f);
+                var v = (_destination.transform.position + new Vector3(0, 1, 0))-transform.position;
+                // transform.rotation = Quaternion.LookRotation(v,Vector3.up);
+                transform.Find("Rotate").rotation = Quaternion.LookRotation(v,Vector3.up);
+
+                transform.position += (v / v.magnitude) * 0.02f;
+                if ((transform.position - _destination.transform.position - new Vector3(0, 1, 0)).magnitude < 0.01f)
+                {
+                    correspondingCell = _destination;
+                    transform.position = (_destination.transform.position + new Vector3(0, 1, 0));
+                }
+                
+            }
+            else
+            {
                 correspondingCell = _destination;
             }
         }

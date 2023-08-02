@@ -389,7 +389,8 @@ namespace DestinyTactics.Systems
                 if (a.correspondingCharacter &&
                     a.correspondingCharacter.type != cell.correspondingCharacter.type)
                 {
-                    a.correspondingCharacter.GetComponent<Renderer>().material.EnableKeyword("_EMISSION");
+                    // a.correspondingCharacter.GetComponent<Renderer>().material.EnableKeyword("_EMISSION");
+                    a.correspondingCharacter.correspondingCell.GetComponent<Renderer>().material.color = Color.red;
                 }
             });
         }
@@ -408,8 +409,8 @@ namespace DestinyTactics.Systems
             _clickState = ClickState.Unactivated;
             if (ActivatedCell)
             {
-                ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material.DisableKeyword(
-                    "_EMISSION");
+                // ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material.DisableKeyword(
+                //     "_EMISSION");
             }
 
             CloseAbilityPanel();
@@ -420,8 +421,8 @@ namespace DestinyTactics.Systems
         {
             ActivatedCell = activateCell;
             _clickState = ClickState.Activated;
-            ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material
-                .EnableKeyword("_EMISSION");
+            // ActivatedCell.correspondingCharacter.GetComponent<Renderer>().material
+            //     .EnableKeyword("_EMISSION");
             OpenAbilityPanel(activateCell.correspondingCharacter);
             FindAvailable(activateCell, activateCell.correspondingCharacter.AP);
         }
@@ -460,8 +461,8 @@ namespace DestinyTactics.Systems
                 if (a.correspondingCharacter &&
                     a.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type)
                 {
-                    a.correspondingCharacter.GetComponent<Renderer>().material.DisableKeyword("_EMISSION");
-                    a.correspondingCharacter.GetComponent<Renderer>().material.color = Color.white;
+                    a.correspondingCharacter.correspondingCell.GetComponent<Renderer>().material.DisableKeyword("_EMISSION");
+                    a.correspondingCharacter.correspondingCell.GetComponent<Renderer>().material.color = Color.white;
                 }
             });
             _attackCells.Clear();

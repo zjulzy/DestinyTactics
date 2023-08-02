@@ -8,7 +8,7 @@ namespace DestinyTactics.Characters.Abilities
         public FireBall()
         {
             displayName = "火球术";
-            mPConsume = 5;
+            mPConsume = 10;
             attackRatio = 3.0f;
             coolDown = 3;
             attackRange = 5;

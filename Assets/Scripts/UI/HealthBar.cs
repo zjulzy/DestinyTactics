@@ -29,5 +29,10 @@ namespace DestinyTactics.UI
             canvas.sizeDelta = new Vector2((float)2, canvas.sizeDelta.y);
             imageFill.sizeDelta = new Vector2((float)MP / defaultMp*2, imageFill.sizeDelta.y);
         }
+
+        private void Update()
+        {
+            transform.rotation = GameObject.Find("Main Camera").transform.rotation;
+        }
     }
 }
