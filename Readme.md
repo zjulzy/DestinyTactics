@@ -5,7 +5,9 @@
 目前只支持玩家和AI对战，只有一个关卡  
 
 [//]: # (![]&#40;image.jpg&#41;)
-<iframe height=498 width=510 src="video.mkv">
+[//]: # (<iframe height=498 width=510 src="./video.mkv">  )
+https://github.com/zjulzy/DestinyTactics/assets/34120274/28f2b454-8ca6-45aa-a02b-1e6b5944537f
+
 ## 项目实现
 1. 游戏核心系统
 游戏中的棋盘通过邻接矩阵存储图的数据结构,并通过各个各自的几何关系初始化.
