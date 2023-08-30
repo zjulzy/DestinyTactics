@@ -36,6 +36,7 @@ https://github.com/zjulzy/DestinyTactics/assets/34120274/28f2b454-8ca6-45aa-a02b
   * [x] 玩家棋子增加更多能力
 
 * [] AI系统
+  * [x] AI基于A*的寻路
   * [] 优化AI索敌系统
 
 
