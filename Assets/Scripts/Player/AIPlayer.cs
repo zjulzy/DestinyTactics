@@ -88,7 +88,12 @@ namespace DestinyTactics.Players
                     if (AStar.CalculateH(character.correspondingCell, targets[character].correspondingCell) <=
                         ability.attackRange)
                     {
-                        ability.TryActivate(character, targets[character]);
+                        bool res = ability.TryActivate(character, targets[character]);
+                        // 如果激活失败则选择激活条件最简单的普通攻击技能
+                        if (!res)
+                        {
+                            character.abilities[0].TryActivate(character, targets[character]);
+                        }
                     }
                     else
                     {
@@ -125,7 +130,12 @@ namespace DestinyTactics.Players
                         if (AStar.CalculateH(character.correspondingCell, targets[character].correspondingCell) <=
                             ability.attackRange)
                         {
-                            ability.TryActivate(character, targets[character]);
+                            bool res = ability.TryActivate(character, targets[character]);
+                            // 如果激活失败则选择激活条件最简单的普通攻击技能
+                            if (!res)
+                            {
+                                character.abilities[0].TryActivate(character, targets[character]);
+                            }
                         }
                     }
                 }

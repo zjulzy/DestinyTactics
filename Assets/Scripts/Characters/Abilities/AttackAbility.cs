@@ -15,9 +15,23 @@ namespace DestinyTactics.Characters.Abilities
         public override bool TryActivate(Character insighter, Character target)
         {
             if (!CommitAbility()) return false;
+            BIsActivated = true;
+            Insighter = insighter;
+            Target = target;
             insighter.bCanAttack = false;
-            insighter.Attack(target,insighter.AttackValue);
+            insighter.Attack(target, insighter.AttackValue);
             return true;
+        }
+
+        public override void OnAnimationEnd()
+        {
+            base.OnAnimationEnd();
+
+            if (BIsActivated)
+            {
+                Target.Health -= Insighter.AttackValue;
+                BIsActivated = false;
+            }
         }
     }
 }

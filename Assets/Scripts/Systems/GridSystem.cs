@@ -171,7 +171,7 @@ namespace DestinyTactics.Systems
                 {
                     case ClickState.Unactivated:
                         if (ClickedCell.correspondingCharacter &&
-                            ClickedCell.correspondingCharacter.type == CharacterType.Player&&
+                            ClickedCell.correspondingCharacter.type == CharacterType.Player &&
                             ClickedCell.correspondingCharacter.bCanAttack)
                         {
                             //基于点击cell直接进行激活
@@ -232,19 +232,21 @@ namespace DestinyTactics.Systems
                                 // 需要检查技能激活结果，如果失败则不退出状态
                                 if (res)
                                 {
+                                    target.GetComponentInChildren<Renderer>().material.DisableKeyword("_EMISSION");
+                                    target.GetComponentInChildren<Renderer>().material.color = Color.white;
                                     ClearAttackable();
                                     //退出激活模式
                                     Unactivate();
                                 }
-
                                 
                             }
                         }
-                        else if(!_availableCells.Contains(ClickedCell))
+                        else if (!_availableCells.Contains(ClickedCell))
                         {
                             //退出激活模式
                             Unactivate();
                         }
+
                         break;
                 }
             }
@@ -300,7 +302,8 @@ namespace DestinyTactics.Systems
                             if (HoveredCell.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type)
                             {
                                 var target = HoveredCell.correspondingCharacter;
-                                target.GetComponent<Renderer>().material.color = CellColor.attackPrepared;
+                                // target.GetComponent<Renderer>().material.color = CellColor.attackPrepared;
+                                target.GetComponentInChildren<Renderer>().material.color = CellColor.attackPrepared;
                                 ActivatedCell.correspondingCharacter.AttackPrepare();
                             }
                         }
@@ -341,10 +344,13 @@ namespace DestinyTactics.Systems
                     case ClickState.AbilitySelected:
                         if (_attackCells.Contains(UnhoveredCell) && UnhoveredCell != ActivatedCell)
                         {
-                            UnhoveredCell.correspondingCharacter.GetComponent<Renderer>().material
-                                .DisableKeyword("_EMISSION");
-                            UnhoveredCell.correspondingCharacter.GetComponent<Renderer>().material.color =
-                                Color.white;
+                            if (UnhoveredCell.correspondingCharacter)
+                            {
+                                UnhoveredCell.correspondingCharacter.GetComponentInChildren<Renderer>().material
+                                    .DisableKeyword("_EMISSION");
+                                UnhoveredCell.correspondingCharacter.GetComponentInChildren<Renderer>().material.color =
+                                    Color.white;
+                            }
                         }
 
                         break;
@@ -461,7 +467,8 @@ namespace DestinyTactics.Systems
                 if (a.correspondingCharacter &&
                     a.correspondingCharacter.type != ActivatedCell.correspondingCharacter.type)
                 {
-                    a.correspondingCharacter.correspondingCell.GetComponent<Renderer>().material.DisableKeyword("_EMISSION");
+                    a.correspondingCharacter.correspondingCell.GetComponent<Renderer>().material
+                        .DisableKeyword("_EMISSION");
                     a.correspondingCharacter.correspondingCell.GetComponent<Renderer>().material.color = Color.white;
                 }
             });

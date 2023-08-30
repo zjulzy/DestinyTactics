@@ -49,6 +49,9 @@ namespace DestinyTactics.Characters
 
         public Action allowInput;
         public Action blockInput;
+
+        // 攻击动画结束后，重新进入ability类处理伤害计算等
+        public Action endAttackAnimation;
         public Action<int, int> ChangeHealth;
         public Action<int, int> ChangeMP;
         public Action<Character> CharacterDead;
@@ -114,7 +117,7 @@ namespace DestinyTactics.Characters
             _attackRange = defaultAttackRange;
             CharacterDead += ((a) => { correspondingCell.correspondingCharacter = null; });
             ChangeHealth += GetComponentInChildren<HealthBar>().OnChangeHealth;
-            CharacterDead += ((a) => { _animator.SetTrigger("Dead");});
+            CharacterDead += ((a) => { _animator.SetTrigger("Dead"); });
             ChangeMP += GetComponentInChildren<HealthBar>().OnChangeMP;
 
             abilities = new List<Ability>();
@@ -122,6 +125,7 @@ namespace DestinyTactics.Characters
             {
                 Type t = AbilityMapping.Mapping[a];
                 var ability = (Ability)t.GetConstructor(new Type[] { }).Invoke(new object[] { });
+                endAttackAnimation += ability.OnAnimationEnd;
                 ability.SetOwner(this);
                 abilities.Add(ability);
             });
@@ -166,7 +170,6 @@ namespace DestinyTactics.Characters
             Debug.Log("attack");
             _animator.SetTrigger("IsAttacking");
             CharacterAttack(this, target, attackValue);
-            target.Health -= _attack;
             bCanAttack = false;
             AP = 0;
         }
@@ -208,26 +211,30 @@ namespace DestinyTactics.Characters
             _AP = defaultAP;
         }
 
-        public void Update()
+        public void FixedUpdate()
         {
             if (_destination.GetLocation() != transform.position - new Vector3(0, 1, 0))
             {
-                var v = (_destination.transform.position + new Vector3(0, 1, 0))-transform.position;
+                var v = (_destination.transform.position + new Vector3(0, 1, 0)) - transform.position;
                 // transform.rotation = Quaternion.LookRotation(v,Vector3.up);
-                transform.Find("Rotate").rotation = Quaternion.LookRotation(v,Vector3.up);
+                transform.Find("Rotate").rotation = Quaternion.LookRotation(v, Vector3.up);
 
-                transform.position += (v / v.magnitude) * 0.02f;
+                transform.position += (v / v.magnitude) * 0.2f;
                 if ((transform.position - _destination.transform.position - new Vector3(0, 1, 0)).magnitude < 0.01f)
                 {
                     correspondingCell = _destination;
                     transform.position = (_destination.transform.position + new Vector3(0, 1, 0));
                 }
-                
             }
             else
             {
                 correspondingCell = _destination;
             }
+        }
+
+        public void OnAnimationEnd()
+        {
+            endAttackAnimation();
         }
     }
 }
