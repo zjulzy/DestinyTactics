@@ -81,9 +81,14 @@ namespace DestinyTactics.Players
                     enemies.Sort((a, b) => { return a.Health - b.Health; });
                     targets[character] = enemies[0];
                     // 随机选择一种能力，并基于该能力的攻击距离向敌方移动
-                    // TODO: AI玩家智能选择技能
+                    // 需要随机找到一个能够释放的技能，所以在每个敌人都应该有一个可以随意释放的普通攻击
+                    // TODO: AI玩家智能选择技能3
                     var ability = character.abilities[Random.Range(0, character.abilities.Count)];
-                    
+                    while (!ability.TryCommitCost())
+                    {
+                        ability = character.abilities[Random.Range(0, character.abilities.Count)];
+                    }
+
                     //能打到就直接攻击，否则抵近后攻击
                     if (AStar.CalculateH(character.correspondingCell, targets[character].correspondingCell) <=
                         ability.attackRange)

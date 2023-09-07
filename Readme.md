@@ -35,8 +35,8 @@ https://github.com/zjulzy/DestinyTactics/assets/34120274/28f2b454-8ca6-45aa-a02b
   * [x] 实现character的动画系统,攻击和受击动画
   * [x] 玩家棋子增加更多能力
 
-* [] AI系统
-  * [] 优化AI索敌系统
+* [ ] AI系统
+  * [ ] 优化AI索敌系统
 
 
 

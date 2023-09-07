@@ -31,7 +31,7 @@ namespace DestinyTactics.Characters.Abilities
     // <para>使用TryActivate激活技能,该函数会先行调用CommitAbility来计算技能消耗,如果满足消耗则进入伤害计算</para>
     // <para>TryActivate会控制角色的动画,但伤害的施加需要在角色的动画释放完毕后通过委托在OnAnimationEnd中作为回调进行</para>
     // </remarks>
-    public class Ability:Object
+    public class Ability : Object
     {
         public string displayName;
         public int coolDown;
@@ -112,6 +112,11 @@ namespace DestinyTactics.Characters.Abilities
         public virtual void OnAnimationEnd()
         {
             if (!BIsActivated) return;
+        }
+
+        public virtual bool TryCommitCost()
+        {
+            return _currentCoolDown == 0 && Owner.MP >= mPConsume;
         }
 
         #endregion

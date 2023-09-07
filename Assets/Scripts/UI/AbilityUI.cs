@@ -5,10 +5,11 @@ using DestinyTactics.Characters.Abilities;
 using DestinyTactics.Systems;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace DestinyTactics.UI
 {
-    public class AbilityUI:MonoBehaviour
+    public class AbilityUI : MonoBehaviour
     {
         public GameObject abilityButtonPrefab;
         public int selectedID;
@@ -17,16 +18,17 @@ namespace DestinyTactics.UI
 
         //角色拥有的ability集合
         private List<Ability> _abilities;
+
         public void Awake()
         {
             _abilities = new List<Ability>();
             gridSystem.OpenAbilityPanel += OnOpenAbilityPanel;
             gridSystem.CloseAbilityPanel += OnCloseAbilityPanel;
-            
+
             // 在开始时需要使技能面板不可见
             GetComponent<CanvasGroup>().alpha = 0;
         }
-        
+
         // <summary>
         // 修改技能面板上的按钮，需要传入一个新的技能列表
         // 根据技能内容实例化技能按钮
@@ -48,6 +50,11 @@ namespace DestinyTactics.UI
                 GameObject newButton = Instantiate(abilityButtonPrefab, transform);
                 newButton.GetComponentInChildren<TextMeshProUGUI>().text = a.displayName;
                 newButton.GetComponentInChildren<AbilityButton>().id = id;
+                if (!a.TryCommitCost())
+                {
+                    newButton.GetComponent<Button>().interactable = false;
+                }
+
                 id++;
             });
             selectedID = -1;
@@ -76,6 +83,5 @@ namespace DestinyTactics.UI
         {
             selectedID = -1;
         }
-
     }
 }
